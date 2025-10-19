@@ -286,3 +286,52 @@ memoryAddButton.addEventListener('click', function() {
 memorySubtractButton.addEventListener('click', function() {
     calculator.memorySubtract();
 });
+
+// --- FINAL FEATURE: Keyboard Input ---
+// This code is separate from the Calculator class and will not interfere with it.
+// It listens for key presses and simulates a click on the corresponding button.
+
+window.addEventListener('keydown', function(event) {
+    const key = event.key;
+
+    // Find the button that corresponds to the key pressed.
+    // We use data attributes to find them, which is very reliable.
+    let button;
+
+    if (key >= 0 && key <= 9) {
+        // This handles all number keys (0-9).
+        // We find the button whose text content is the key you pressed.
+        button = Array.from(numberButtons).find(btn => btn.innerText === key);
+    } else if (key === '.') {
+        button = document.querySelector('[data-number="."]');
+    } else if (key === '+') {
+        button = Array.from(operationButtons).find(btn => btn.innerText === '+');
+    } else if (key === '-') {
+        button = Array.from(operationButtons).find(btn => btn.innerText === '-');
+    } else if (key === '*') {
+        button = Array.from(operationButtons).find(btn => btn.innerText === '×');
+    } else if (key === '/') {
+        button = Array.from(operationButtons).find(btn => btn.innerText === '÷');
+    } else if (key === '%') {
+        button = percentButton;
+    } else if (key === 'Enter' || key === '=') {
+        button = equalsButton;
+    } else if (key === 'Backspace') {
+        button = deleteButton;
+    } else if (key === 'Escape' || key.toLowerCase() === 'c') {
+        // Allows 'Escape' or 'c' for "Clear"
+        button = allClearButton;
+    } else if (key.toLowerCase() === 'r') {
+        // 'r' for "Root"
+        button = sqrtButton;
+    } else if (key.toLowerCase() === 'n') {
+        // 'n' for "Negate" (+/-)
+        button = toggleSignButton;
+    }
+
+    // If a matching button was found, "click" it.
+    if (button) {
+        event.preventDefault(); // Prevents default browser actions (like typing '/' to search)
+        button.click();
+    }
+});
