@@ -55,7 +55,7 @@ class Calculator {
         this.updateDisplay();
     }
 
-    evaluate() {
+   evaluate() {
         // First, handle standard operator replacement
         let expression = this.currentOperand.replace(/×/g, '*').replace(/÷/g, '/');
         
@@ -79,16 +79,44 @@ class Calculator {
         }
     }
 
+    // === THIS IS THE FINAL, CORRECTED COMPUTE FUNCTION ===
     compute() {
         if (this.currentOperand === '') return;
         try {
-            const result = this.evaluate();
-            this.previousOperand = `${this.currentOperand} =`;
+            let result;
+            // This 'if' statement is the critical fix.
+            // It checks if we are in the special square root mode.
+            if (this.operation === '√') {
+                const number = parseFloat(this.currentOperand);
+                if (number < 0) throw new Error("Invalid input for √");
+                result = Math.sqrt(number);
+                // Update the top line to show the full calculation.
+                this.previousOperand = `√(${this.currentOperand}) =`;
+            } else {
+                // Otherwise, perform the standard BODMAS calculation.
+                result = this.evaluate();
+                this.previousOperand = `${this.currentOperand} =`;
+            }
+
             this.currentOperand = result.toString();
             this.isResult = true;
+            this.operation = undefined; // Reset the operation after calculation
             this.updateDisplay();
+
         } catch (error) {
             this.handleError(error);
+        }
+    }
+     chooseRootOperation() {
+        // If there's already a number, calculate its root immediately (postfix)
+        if (this.currentOperand !== '' && !this.isResult) {
+            this.handleSpecialOperation('sqrt');
+        } else {
+            // Otherwise, enter prefix root mode
+            this.clear();
+            this.operation = '√';
+            this.previousOperand = '√(';
+            this.updateDisplay();
         }
     }
 
@@ -154,25 +182,31 @@ class Calculator {
         catch (e) { this.handleError(e); }
     }
 
+    // === THIS IS THE CORRECTED FUNCTION ===
     updateDisplay(isError = false) {
-        // Handle the main display (current operand)
+        // This part handles the bottom display (the number you are typing)
         if (this.isResult && !isError) {
             const number = parseFloat(this.currentOperand);
             if (!isNaN(number)) {
-                // Use 'en-IN' for Indian numbering system
                 this.currentOperandTextElement.innerText = number.toLocaleString('en-IN', { maximumFractionDigits: 20 });
             } else {
                 this.currentOperandTextElement.innerText = this.currentOperand;
             }
         } else {
-            // Show the expression as it's being typed
             this.currentOperandTextElement.innerText = this.currentOperand;
         }
 
-        // Handle the top display (previous operand)
-        this.previousOperandTextElement.innerText = this.previousOperand;
+        // === THIS IS THE FIX ===
+        // It now has a special check. If the calculator is in "square root mode,"
+        // it will dynamically build the top line with the closing bracket.
+        if (this.operation === '√') {
+            this.previousOperandTextElement.innerText = `√(${this.currentOperand})`;
+        } else {
+            // Otherwise, it works like it did before.
+            this.previousOperandTextElement.innerText = this.previousOperand;
+        }
 
-        // Handle error styling
+        // This part handles the red text for errors
         if (isError) {
             this.currentOperandTextElement.classList.add('error-message');
         } else {
@@ -225,7 +259,7 @@ deleteButton.addEventListener('click', function() {
 });
 
 sqrtButton.addEventListener('click', function() {
-    calculator.handleSpecialOperation('sqrt');
+    calculator.chooseRootOperation();
 });
 
 percentButton.addEventListener('click', function() {
