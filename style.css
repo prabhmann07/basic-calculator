@@ -7,6 +7,8 @@
 body {
     margin: 0;
     background: linear-gradient(to right, #4a00e0, #8e2de2);
+    /* Prevent the body itself from ever scrolling */
+    overflow: hidden; 
 }
 
 body::before {
@@ -26,9 +28,19 @@ body::before {
     display: grid;
     justify-content: center;
     align-content: center;
-    min-height: 100vh;
+    height: 100vh; /* Make the grid container exactly the screen height */
+
+    /* === THIS IS THE FINAL FIX === */
+    /* Instead of fixed pixel heights that can overflow, we use flexible fractional units (fr). */
+    /* This divides the available vertical space proportionally among all the rows, */
+    /* guaranteeing that the entire calculator fits on the screen without scrolling. */
+    /* The display gets a larger portion (1.5fr) of the space. */
     grid-template-columns: repeat(4, 120px); 
-    grid-template-rows: minmax(100px, auto) repeat(7, 75px);
+    grid-template-rows: 1.5fr repeat(7, 1fr); /* 1 display row + 7 button rows */
+    
+    /* We add a max-height for very tall screens to prevent it from stretching too much */
+    max-height: 850px;
+    padding: 10px; /* Add some padding around the grid */
 }
 
 .calculator-grid > button {
@@ -38,6 +50,8 @@ body::before {
     outline: none;
     background-color: rgba(0, 0, 0, .65);
     color: white;
+    /* Add a transition for a smooth hover effect */
+    transition: background-color 0.15s ease-in-out;
 }
 
 .calculator-grid > button:hover {
@@ -74,6 +88,7 @@ body::before {
     padding: 10px;
     word-wrap: break-word;
     word-break: break-all;
+    min-height: 80px; /* Ensure display has a minimum height */
 }
 
 .previous-operand {
