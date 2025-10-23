@@ -7,7 +7,7 @@
 body {
     margin: 0;
     background: linear-gradient(to right, #4a00e0, #8e2de2);
-    /* Prevent the body itself from ever scrolling */
+    /* Prevent scrolling on the body */
     overflow: hidden; 
 }
 
@@ -24,25 +24,26 @@ body::before {
     user-select: none;
 }
 
+/* ==========================================
+  Calculator Grid Layout (Desktop Version)
+  ==========================================
+*/
 .calculator-grid {
     display: grid;
-    justify-content: center;
-    align-content: center;
-    height: 100vh; /* Make the grid container exactly the screen height */
+    justify-content: center; /* Center horizontally */
+    align-content: center;   /* Center vertically */
+    min-height: 100vh;       /* Ensure it takes at least full screen height for centering */
 
-    /* === THIS IS THE FINAL FIX === */
-    /* Instead of fixed pixel heights that can overflow, we use flexible fractional units (fr). */
-    /* This divides the available vertical space proportionally among all the rows, */
-    /* guaranteeing that the entire calculator fits on the screen without scrolling. */
-    /* The display gets a larger portion (1.5fr) of the space. */
+    /* Fixed layout using pixels, suitable for desktop */
     grid-template-columns: repeat(4, 120px); 
-    grid-template-rows: 1.5fr repeat(7, 1fr); /* 1 display row + 7 button rows */
-    
-    /* We add a max-height for very tall screens to prevent it from stretching too much */
-    max-height: 850px;
-    padding: 10px; /* Add some padding around the grid */
+    /* Display row + 7 button rows at 75px height */
+    grid-template-rows: minmax(100px, auto) repeat(7, 75px); 
 }
 
+/* ==========================================
+  Button Styling
+  ==========================================
+*/
 .calculator-grid > button {
     cursor: pointer;
     font-size: 2rem;
@@ -50,7 +51,7 @@ body::before {
     outline: none;
     background-color: rgba(0, 0, 0, .65);
     color: white;
-    /* Add a transition for a smooth hover effect */
+    /* Smooth transition for hover effect */
     transition: background-color 0.15s ease-in-out;
 }
 
@@ -58,50 +59,60 @@ body::before {
     background-color: rgba(0, 0, 0, .8);
 }
 
+/* Specific styles for operator buttons */
 .operator {
-    background-color: #ff9500;
+    background-color: #ff9500; /* Orange */
 }
 
 .operator:hover {
-    background-color: #ffab40;
+    background-color: #ffab40; /* Lighter orange */
 }
 
+/* Specific styles for the equals button */
 [data-equals].operator {
-    background-color: #e000b7;
+    background-color: #e000b7; /* Pink */
 }
 
 [data-equals].operator:hover {
-    background-color: #ff00d4;
+    background-color: #ff00d4; /* Lighter pink */
 }
 
+/* Style for buttons spanning two columns */
 .span-two {
     grid-column: span 2;
 }
 
+/* ==========================================
+  Display Styling
+  ==========================================
+*/
 .output {
-    grid-column: 1 / -1;
+    grid-column: 1 / -1; /* Span all columns */
     background-color: rgba(0, 0, 0, .75);
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    justify-content: space-around;
+    align-items: flex-end; /* Align text to the right */
+    justify-content: space-around; /* Space out the two lines */
     padding: 10px;
-    word-wrap: break-word;
+    word-wrap: break-word; /* Wrap long numbers/expressions */
     word-break: break-all;
-    min-height: 80px; /* Ensure display has a minimum height */
+    min-height: 100px; /* Ensure display has a minimum height */
 }
 
+/* Top line (previous operand/equation) */
 .previous-operand {
     color: rgba(255, 255, 255, .75);
     font-size: 1.5rem;
 }
 
+/* Bottom line (current operand/result) */
 .current-operand {
     color: white;
     font-size: 2.5rem;
 }
 
+/* Special style for error messages */
 .current-operand.error-message {
     font-size: 1.6rem;
-    color: rgba(255, 100, 100, 0.85);
+    color: rgba(255, 100, 100, 0.85); /* Subtle red */
 }
