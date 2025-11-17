@@ -1,18 +1,21 @@
+// Main class to encapsulate all calculator logic
 class Calculator {
     constructor(previousOperandTextElement, currentOperandTextElement) {
         this.previousOperandTextElement = previousOperandTextElement;
         this.currentOperandTextElement = currentOperandTextElement;
-        this.memory = 0;
+        this.memory = 0; 
         this.clear();
     }
 
+    // Clears the calculator state and display
     clear() {
         this.currentOperand = '';
         this.previousOperand = '';
-        this.isResult = false;
+        this.isResult = false; 
         this.updateDisplay();
     }
 
+    // Deletes the last character from the current operand
     delete() {
         if (this.isResult) {
             this.clear();
@@ -22,19 +25,21 @@ class Calculator {
         this.updateDisplay();
     }
 
+    // Appends a number or the '%' symbol
     appendNumber(number) {
         if (this.isResult) {
             this.currentOperand = '';
-            this.previousOperand = ''; // <-- THIS IS THE FIX
+            this.previousOperand = ''; 
             this.isResult = false;
         }
         this.currentOperand += number;
         this.updateDisplay();
     }
 
+    // Appends an operator to the expression
     chooseOperation(operation) {
         if (this.isResult) {
-            this.previousOperand = ''; // <-- THIS IS THE FIX
+            this.previousOperand = ''; 
             this.isResult = false;
         }
 
@@ -46,6 +51,7 @@ class Calculator {
 
         if (this.currentOperand === '' || this.currentOperand === '-') return;
 
+        // Prevent stacking operators (e.g., '5++') by replacing the last one
         const lastChar = this.currentOperand.slice(-1);
         if (['+', '×', '÷', '-'].includes(lastChar)) {
             this.currentOperand = this.currentOperand.slice(0, -1);
@@ -55,23 +61,17 @@ class Calculator {
         this.updateDisplay();
     }
 
-   evaluate() {
-        // First, handle standard operator replacement
+    // Core calculation engine; follows BODMAS.
+    evaluate() {
         let expression = this.currentOperand.replace(/×/g, '*').replace(/÷/g, '/');
         
-        // This line finds any number followed by '%' and replaces it with its decimal equivalent
         let safeExpression = expression.replace(/(\d+\.?\d*)%/g, '($1/100)');
         
         try {
             let result = new Function('return ' + safeExpression)();
             if (!isFinite(result)) throw new Error("Division by zero");
 
-            // === THIS IS THE FIX ===
-            // This line rounds the result to 12 significant digits.
-            // It is the standard and correct way to eliminate the tiny,
-            // bizarre floating-point errors you are seeing.
             result = parseFloat(result.toPrecision(12));
-
             return result;
         } catch (error) {
             if (error.message === "Division by zero") throw error;
@@ -79,51 +79,49 @@ class Calculator {
         }
     }
 
-    // === THIS IS THE FINAL, CORRECTED COMPUTE FUNCTION ===
+    // Computes the final result when '=' is pressed
     compute() {
         if (this.currentOperand === '') return;
         try {
             let result;
-            // This 'if' statement is the critical fix.
-            // It checks if we are in the special square root mode.
+            // Fix: Check for special square root "prefix" mode (e.g., √9)
             if (this.operation === '√') {
                 const number = parseFloat(this.currentOperand);
                 if (number < 0) throw new Error("Invalid input for √");
                 result = Math.sqrt(number);
-                // Update the top line to show the full calculation.
-                this.previousOperand = `√(${this.currentOperand}) =`;
+                this.previousOperand = `√(${this.currentOperand}) =`; // Show full operation
             } else {
-                // Otherwise, perform the standard BODMAS calculation.
                 result = this.evaluate();
                 this.previousOperand = `${this.currentOperand} =`;
             }
 
             this.currentOperand = result.toString();
-            this.isResult = true;
-            this.operation = undefined; // Reset the operation after calculation
+            this.isResult = true; 
+            this.operation = undefined; 
             this.updateDisplay();
 
         } catch (error) {
             this.handleError(error);
         }
     }
-     chooseRootOperation() {
-        // If there's already a number, calculate its root immediately (postfix)
+
+    // Handles the dual-mode square root button
+    chooseRootOperation() {   
         if (this.currentOperand !== '' && !this.isResult) {
             this.handleSpecialOperation('sqrt');
         } else {
-            // Otherwise, enter prefix root mode
             this.clear();
-            this.operation = '√';
+            this.operation = '√'; 
             this.previousOperand = '√(';
             this.updateDisplay();
         }
     }
 
+    // Handles immediate special operations 
     handleSpecialOperation(type) {
         if (this.currentOperand === '') return;
         try {
-            const result = this.evaluate();
+            const result = this.evaluate(); 
             let newResult;
 
             switch (type) {
@@ -132,7 +130,6 @@ class Calculator {
                     this.previousOperand = `√( ${this.currentOperand} )`;
                     newResult = Math.sqrt(result);
                     break;
-                // 'percent' case is now removed
                 case 'toggleSign':
                     this.previousOperand = `negate( ${this.currentOperand} )`;
                     newResult = result * -1;
@@ -146,6 +143,7 @@ class Calculator {
         }
     }
 
+    // Central function for displaying errors gracefully on the screen
     handleError(error) {
         this.previousOperand = "Error";
         if (error.message === "Division by zero") {
@@ -156,18 +154,17 @@ class Calculator {
             this.currentOperand = "Invalid Expression";
         }
         this.isResult = true;
-        this.updateDisplay(true);
+        this.updateDisplay(true); 
     }
 
+    // Memory Functions (Optional Feature) 
     memoryClear() {
         this.memory = 0;
     }
 
     memoryRecall() {
-        // This function now correctly replaces the current operand and sets the
-        // isResult flag to true. This tells the calculator that the next
-        // number press should clear the display and start a new number.
         this.currentOperand = this.memory.toString();
+        this.previousOperand = '';
         this.isResult = true;
         this.updateDisplay();
     }
@@ -182,9 +179,8 @@ class Calculator {
         catch (e) { this.handleError(e); }
     }
 
-    // === THIS IS THE CORRECTED FUNCTION ===
+    // Updates the two-line display after any action
     updateDisplay(isError = false) {
-        // This part handles the bottom display (the number you are typing)
         if (this.isResult && !isError) {
             const number = parseFloat(this.currentOperand);
             if (!isNaN(number)) {
@@ -196,17 +192,13 @@ class Calculator {
             this.currentOperandTextElement.innerText = this.currentOperand;
         }
 
-        // === THIS IS THE FIX ===
-        // It now has a special check. If the calculator is in "square root mode,"
-        // it will dynamically build the top line with the closing bracket.
         if (this.operation === '√') {
             this.previousOperandTextElement.innerText = `√(${this.currentOperand})`;
         } else {
-            // Otherwise, it works like it did before.
             this.previousOperandTextElement.innerText = this.previousOperand;
         }
 
-        // This part handles the red text for errors
+        // Handle red error message styling
         if (isError) {
             this.currentOperandTextElement.classList.add('error-message');
         } else {
@@ -215,7 +207,7 @@ class Calculator {
     }
 }
 
-// --- DOM Element Selection ---
+//  DOM Element Selection 
 const previousOperandTextElement = document.querySelector('[data-previous-operand]');
 const currentOperandTextElement = document.querySelector('[data-current-operand]');
 const numberButtons = document.querySelectorAll('[data-number]');
@@ -231,9 +223,10 @@ const memoryRecallButton = document.querySelector('[data-memory-recall]');
 const memoryAddButton = document.querySelector('[data-memory-add]');
 const memorySubtractButton = document.querySelector('[data-memory-subtract]');
 
+// Create a new instance of our Calculator class
 const calculator = new Calculator(previousOperandTextElement, currentOperandTextElement);
 
-// --- Event Listeners (Old Way) ---
+// Event Listeners 
 numberButtons.forEach(function(button) {
     button.addEventListener('click', function() {
         calculator.appendNumber(button.innerText);
@@ -258,19 +251,20 @@ deleteButton.addEventListener('click', function() {
     calculator.delete();
 });
 
+// Special buttons
 sqrtButton.addEventListener('click', function() {
-    calculator.chooseRootOperation();
+    calculator.chooseRootOperation(); 
 });
 
 percentButton.addEventListener('click', function() {
-    // The percent button now just adds the '%' symbol to the expression.
-    calculator.appendNumber('%');
+    calculator.appendNumber('%'); 
 });
 
 toggleSignButton.addEventListener('click', function() {
     calculator.handleSpecialOperation('toggleSign');
 });
 
+// Memory buttons
 memoryClearButton.addEventListener('click', function() {
     calculator.memoryClear();
 });
@@ -287,20 +281,16 @@ memorySubtractButton.addEventListener('click', function() {
     calculator.memorySubtract();
 });
 
-// --- FINAL FEATURE: Keyboard Input ---
-// This code is separate from the Calculator class and will not interfere with it.
-// It listens for key presses and simulates a click on the corresponding button.
-
+//  FINAL FEATURE: Keyboard Input 
 window.addEventListener('keydown', function(event) {
-    const key = event.key;
+    if (event.ctrlKey || event.shiftKey || event.metaKey || event.altKey) {
+        return;
+    }
 
-    // Find the button that corresponds to the key pressed.
-    // We use data attributes to find them, which is very reliable.
-    let button;
+    const key = event.key;
+    let button; 
 
     if (key >= 0 && key <= 9) {
-        // This handles all number keys (0-9).
-        // We find the button whose text content is the key you pressed.
         button = Array.from(numberButtons).find(btn => btn.innerText === key);
     } else if (key === '.') {
         button = document.querySelector('[data-number="."]');
@@ -319,19 +309,16 @@ window.addEventListener('keydown', function(event) {
     } else if (key === 'Backspace') {
         button = deleteButton;
     } else if (key === 'Escape' || key.toLowerCase() === 'c') {
-        // Allows 'Escape' or 'c' for "Clear"
         button = allClearButton;
     } else if (key.toLowerCase() === 'r') {
-        // 'r' for "Root"
         button = sqrtButton;
     } else if (key.toLowerCase() === 'n') {
-        // 'n' for "Negate" (+/-)
-        button = toggleSignButton;
+        button = toggleSignButton; 
     }
 
-    // If a matching button was found, "click" it.
+    // If a matching button was found,click it
     if (button) {
-        event.preventDefault(); // Prevents default browser actions (like typing '/' to search)
+        event.preventDefault(); 
         button.click();
     }
 });
